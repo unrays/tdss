@@ -1,14 +1,9 @@
-//===-- storage_traits.hpp --------------------------------------*- C++ -*-===//
-//
-// Part of the Prysma Project, under the GNU GPL v3.0 or later.
-// See LICENSE at the project root for license information.
-// SPDX-License-Identifier: GPL-3.0-or-later WITH Prysma-exception-1.0
-//
-//===----------------------------------------------------------------------===//
+// Copyright (c) May 2026 Félix-Olivier Dumas. All rights reserved.
+// Licensed under the terms described in the LICENSE file
 
 #pragma once
 
-#include "compiler/ast/registry/data/linear_table.hpp"
+#include "linear_table.hpp"
 #include <tuple>
 #include <type_traits>
 
