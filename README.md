@@ -1,4 +1,4 @@
-# Exotic.tdss
+# EXOTIC.tdss
 
 A C++ data-oriented registry with compile-time type mapping and cache-efficient handle-based storage.
 Originally designed as the data layer of a compiler architecture, this system is general-purpose and can be used in other data-oriented systems.
