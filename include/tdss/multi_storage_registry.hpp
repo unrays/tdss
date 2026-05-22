@@ -1,17 +1,11 @@
-//===-- multi_storage_registry.hpp ------------------------------*- C++ -*-===//
-//
-// Part of the Prysma Project, under the GNU GPL v3.0 or later.
-// See LICENSE at the project root for license information.
-// SPDX-License-Identifier: GPL-3.0-or-later WITH Prysma-exception-1.0
-//
-//===----------------------------------------------------------------------===//
+// Copyright (c) May 2026 Félix-Olivier Dumas. All rights reserved.
+// Licensed under the terms described in the LICENSE file
 
 #pragma once
 
-#include "compiler/ast/registry/data/linear_table.hpp"
-#include "compiler/ast/registry/data/smart_storage.hpp"
-#include "compiler/ast/registry/data/storage_traits.hpp"
-#include "compiler/macros/prysma_nodiscard.h"
+#include "linear_table.hpp"
+#include "smart_storage.hpp"
+#include "storage_traits.hpp"
 #include <cstddef>
 #include <tuple>
 #include <utility>
@@ -28,11 +22,10 @@ protected:
     template<typename Up> using RegistryStorageStrategy = SmartStorage<Up, BytesPerStorage / sizeof(Up)>;
 
 public:
-    explicit MultiStorageRegistry(HandleProvider provider = {}) // par copie
-        : handleProvider_(provider), storage_{}
-    {
-        std::cout << "[NODE REGISTRY CTOR] this = " << this << "\n";
-    }
+    explicit MultiStorageRegistry(HandleProvider provider = {})
+        : handleProvider_(provider)
+        , storage_{}
+    {}
 
     ~MultiStorageRegistry() noexcept { reset(); }
 
@@ -45,7 +38,7 @@ public:
         >;
 
         static_assert(
-            !std::is_same_v<Result, PRYSMA_SENTINEL>,
+            !std::is_same_v<Result, sentinel_t>,
             "Unable to resolve the requested type from the LinearTable."
         );
 
@@ -68,80 +61,19 @@ public:
     }
 
 public:
-    // template<typename Tp>
-    // PRYSMA_NODISCARD auto& get(const Tp* obj) noexcept
-    // {
-    //     std::cout << "calling get for -> " << typeid(Tp).name() << "\n";
-
-    //     auto& storage = resolve_storage<Tp>();
-    //     return storage.get(handleProvider_(obj));
-    // }
-
-    // template<typename Up, typename Tp>
-    // PRYSMA_NODISCARD auto& get_for(const Tp* obj) noexcept
-    // {
-    //     std::cout << "calling get_for for -> " << typeid(Tp).name() << "\n";
-
-    //     auto& storage = std::get<RegistryStorageStrategy<Up>>(storage_);
-    //     return storage.get(handleProvider_(obj));
-    // }
-
     template<typename Tp>
-PRYSMA_NODISCARD auto& get(const Tp* obj) noexcept
-{
-    std::cout
-        << "[GET] Tp = " << typeid(Tp).name()
-        << " | obj = " << obj
-        << std::endl;
+    PRYSMA_NODISCARD auto& get(const Tp* obj) noexcept
+    {
+        auto& storage = resolve_storage<Tp>();
+        return storage.get(handleProvider_(obj));
+    }
 
-    auto& storage = resolve_storage<Tp>();
-
-    std::cout
-        << "    -> resolved storage = " << &storage
-        << std::endl;
-
-    auto handle = handleProvider_(obj);
-
-    std::cout
-        << "    -> handle = " << handle
-        << std::endl;
-
-    auto& result = storage.get(handle);
-
-    std::cout
-        << "    -> SUCCESS get(handle)\n";
-
-    return result;
-}
-
-template<typename Up, typename Tp>
-PRYSMA_NODISCARD auto& get_for(const Tp* obj) noexcept
-{
-    std::cout
-        << "[GET_FOR] Tp = " << typeid(Tp).name()
-        << " | Up = " << typeid(Up).name()
-        << " | obj = " << obj
-        << std::endl;
-
-    auto& storage = std::get<RegistryStorageStrategy<Up>>(storage_);
-
-    std::cout
-        << "    -> storage addr = " << &storage
-        << std::endl;
-
-    auto handle = handleProvider_(obj);
-
-    std::cout
-        << "    -> handle = " << handle
-        << std::endl;
-
-    auto& result = storage.get(handle);
-
-    std::cout
-        << "    -> SUCCESS get_for\n";
-
-    return result;
-}
+    template<typename Up, typename Tp>
+    PRYSMA_NODISCARD auto& get_for(const Tp* obj) noexcept
+    {
+        auto& storage = std::get<RegistryStorageStrategy<Up>>(storage_);
+        return storage.get(handleProvider_(obj));
+   }
 
 public:
     template<typename Tp, typename... Types>
