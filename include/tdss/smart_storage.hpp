@@ -1,10 +1,5 @@
-//===-- smart_storage.hpp ---------------------------------------*- C++ -*-===//
-//
-// Part of the Prysma Project, under the GNU GPL v3.0 or later.
-// See LICENSE at the project root for license information.
-// SPDX-License-Identifier: GPL-3.0-or-later WITH Prysma-exception-1.0
-//
-//===----------------------------------------------------------------------===//
+// Copyright (c) May 2026 Félix-Olivier Dumas. All rights reserved.
+// Licensed under the terms described in the LICENSE file
 
 #pragma once
 
@@ -19,7 +14,6 @@
 #include <type_traits>
 #include <iostream>
 #include <variant>
-#include "compiler/macros/prysma_nodiscard.h"
 
 template<typename Tp, std::size_t N>
 class SmartStorage final {
@@ -33,11 +27,11 @@ protected:
 public:
     SmartStorage() : is_constructed_{} {
         if constexpr (is_heap_eligible_) {
-            buffer_ptr_ = static_cast<std::byte*>( // heap alloc
+            buffer_ptr_ = static_cast<std::byte*>(
                 ::operator new(N * sizeof(Tp), std::align_val_t(alignof(Tp)))
             );
         }
-        else { // stack alloc
+        else {
             buffer_ptr_ = &stack_buffer_[0];
         }
     }
@@ -54,7 +48,7 @@ protected:
     void throw_if_out_of_range(std::size_t index) const {
         if (index >= N) [[unlikely]] {
             throw std::out_of_range(
-                "[PRYSMA::SmartStorage] index out of range: "
+                "[EXOTIC::tdss] index out of range: "
                 + std::to_string(index) + " (valid range: 0.." + std::to_string(N - 1) + ")"
             );
         }
@@ -63,7 +57,7 @@ protected:
     void throw_if_existing(std::size_t index) const {
         if (is_constructed_[index]) [[unlikely]] {
             throw std::runtime_error(
-                "[PRYSMA::SmartStorage] construction conflict: slot already occupied at index "
+                "[EXOTIC::tdss] construction conflict: slot already occupied at index "
                 + std::to_string(index)
             );
         }
@@ -72,78 +66,23 @@ protected:
     void throw_if_nonexistent(std::size_t index) const {
         if (!is_constructed_[index]) [[unlikely]] {
             throw std::runtime_error(
-                "[PRYSMA::SmartStorage] access violation: no object constructed at index "
+                "[EXOTIC::tdss] access violation: no object constructed at index "
                 + std::to_string(index)
             );
         }
     }
 
 public:
-    // PRYSMA_NODISCARD Tp& get(std::size_t index) {
-    //     throw_if_out_of_range(index); throw_if_nonexistent(index);
-    //     return *reinterpret_cast<Tp*>(buffer_ptr_ + index * sizeof(Tp));
-    // }
-
-    PRYSMA_NODISCARD Tp& get(std::size_t index)
-{
-    std::cout
-        << "[SmartStorage::get] index = " << index
-        << " | buffer_ptr = " << static_cast<void*>(buffer_ptr_)
-        << std::endl;
-
-                std::cout << " | type -> " << typeid(Tp).name() << "\n";
-
-    try {
-        throw_if_out_of_range(index);
-        std::cout << "    -> in range OK\n";
-
-        throw_if_nonexistent(index);
-        std::cout << "    -> exists OK\n";
-    }
-    catch (const std::exception& e) {
-        std::cout
-            << "    -> THROW in validation: " << e.what()
-            << std::endl;
-        throw;
+    [[nodiscard]] Tp& get(std::size_t index) {
+        throw_if_out_of_range(index); throw_if_nonexistent(index);
+        return *reinterpret_cast<Tp*>(buffer_ptr_ + index * sizeof(Tp));
     }
 
-    auto* addr = reinterpret_cast<Tp*>(buffer_ptr_ + index * sizeof(Tp));
+    [[nodiscard]] const Tp& get(std::size_t index) const {
+        throw_if_out_of_range(index); throw_if_nonexistent(index);
+        return *reinterpret_cast<const Tp*>(buffer_ptr_ + index * sizeof(Tp));
 
-    std::cout
-        << "    -> computed addr = " << static_cast<void*>(addr)
-        << " (offset = " << (index * sizeof(Tp)) << ")"
-        << std::endl;
-
-    return *addr;
-}
-
-    // PRYSMA_NODISCARD const Tp& get(std::size_t index) const {
-    //     throw_if_out_of_range(index); throw_if_nonexistent(index);
-    //     return *reinterpret_cast<const Tp*>(buffer_ptr_ + index * sizeof(Tp));
-
-    // }
-
-    PRYSMA_NODISCARD const Tp& get(std::size_t index) const
-{
-    std::cout
-        << "[SmartStorage::get const] index = " << index
-        << " | buffer_ptr = " << static_cast<const void*>(buffer_ptr_)
-        << std::endl;
-
-        std::cout << " | type -> " << typeid(Tp).name() << "\n";
-    throw_if_out_of_range(index);
-    throw_if_nonexistent(index);
-
-    auto* addr = reinterpret_cast<const Tp*>(
-        buffer_ptr_ + index * sizeof(Tp)
-    );
-
-    std::cout
-        << "    -> computed addr = " << static_cast<const void*>(addr)
-        << std::endl;
-
-    return *addr;
-}
+    }
 
 public:
     template<typename... Types>
@@ -156,12 +95,6 @@ public:
 
         Tp* ptr = reinterpret_cast<Tp*>(buffer_ptr_ + index * sizeof(Tp));
         new (ptr) Tp(std::forward<Types>(args)...);
-
-            std::cout
-        << "[SMART_STORAGE] construct index = " << index
-        << std::endl;
-
-                std::cout << " | type -> " << typeid(Tp).name() << "\n";
 
         is_constructed_[index] = true;
         return *ptr;
@@ -239,7 +172,7 @@ public:
     }
 
 public:
-    PRYSMA_NODISCARD constexpr std::size_t capacity() const noexcept {
+    [[nodiscard]] constexpr std::size_t capacity() const noexcept {
         return N;
     }
 
@@ -251,4 +184,5 @@ private:
         std::is_same_v<OnlyIfStackEligible, std::monostate>;
 
     std::array<bool, N> is_constructed_;
+
 };
