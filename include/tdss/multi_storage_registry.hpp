@@ -12,8 +12,6 @@
 #include <type_traits>
 #include <iostream>
 
-/***************************************************************************/
-
 template<typename Table, typename HandleProvider, std::size_t N = 1 << 14>
 class MultiStorageRegistry final {
 protected:
@@ -22,7 +20,7 @@ protected:
     template<typename Up> using RegistryStorageStrategy = SmartStorage<Up, BytesPerStorage / sizeof(Up)>;
 
 public:
-    explicit MultiStorageRegistry(HandleProvider provider = {})
+    explicit MultiStorageRegistry(HandleProvider& provider)
         : handleProvider_(provider)
         , storage_{}
     {}
@@ -38,8 +36,8 @@ public:
         >;
 
         static_assert(
-            !std::is_same_v<Result, sentinel_t>,
-            "Unable to resolve the requested type from the LinearTable."
+            !std::is_same_v<Result, SENTINEL>,
+            "Unable to resolve the requested node type from the LinearTable."
         );
 
         return std::get<RegistryStorageStrategy<Result>>(storage_);
@@ -47,14 +45,14 @@ public:
 
 public:
     template<typename Tp>
-    PRYSMA_NODISCARD const auto& get(const Tp* obj) const noexcept
+    [[nodiscard]] const auto& get(const Tp* obj) const noexcept
     {
         const auto& storage = resolve_storage<Tp>();
         return storage.get(handleProvider_(obj));
     }
 
     template<typename Up, typename Tp>
-    PRYSMA_NODISCARD const auto& get_for(const Tp* obj) const noexcept
+    [[nodiscard]] const auto& get_for(const Tp* obj) const noexcept
     {
         const auto& storage = std::get<RegistryStorageStrategy<Up>>(storage_);
         return storage.get(handleProvider_(obj));
@@ -62,18 +60,18 @@ public:
 
 public:
     template<typename Tp>
-    PRYSMA_NODISCARD auto& get(const Tp* obj) noexcept
+    [[nodiscard]] auto& get(const Tp* obj) noexcept
     {
         auto& storage = resolve_storage<Tp>();
         return storage.get(handleProvider_(obj));
     }
 
     template<typename Up, typename Tp>
-    PRYSMA_NODISCARD auto& get_for(const Tp* obj) noexcept
+    [[nodiscard]] auto& get_for(const Tp* obj) noexcept
     {
         auto& storage = std::get<RegistryStorageStrategy<Up>>(storage_);
         return storage.get(handleProvider_(obj));
-   }
+    }
 
 public:
     template<typename Tp, typename... Types>
@@ -122,7 +120,5 @@ public:
 
 private:
     make_registry_storage_t<Table, RegistryStorageStrategy> storage_;
-    HandleProvider handleProvider_;
+    HandleProvider& handleProvider_;
 };
-
-/***************************************************************************/
