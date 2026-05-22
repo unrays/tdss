@@ -56,4 +56,6 @@ registry.reset();
 
 ## License
 
-Boost Software License 1.0
+This project is licensed under the Boost Software License. See the [LICENSE](LICENSE) file for details.
+
+<p align="center"><sub>© Félix-Olivier Dumas 2026</sub></p>
