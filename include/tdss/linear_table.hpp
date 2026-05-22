@@ -1,17 +1,12 @@
-//===-- linear_table.hpp ----------------------------------------*- C++ -*-===//
-//
-// Part of the Prysma Project, under the GNU GPL v3.0 or later.
-// See LICENSE at the project root for license information.
-// SPDX-License-Identifier: GPL-3.0-or-later WITH Prysma-exception-1.0
-//
-//===----------------------------------------------------------------------===//
+// Copyright (c) May 2026 Félix-Olivier Dumas. All rights reserved.
+// Licensed under the terms described in the LICENSE file
 
 #pragma once
 #include <cstddef>
 
 /***************************************************************************/
 
-struct sentinel_t {}; using PRYSMA_SENTINEL = sentinel_t;
+struct sentinel_t {};
 
 /***************************************************************************/
 
@@ -46,7 +41,7 @@ struct lookup<Key, LinearTable<Head, Rest...>> {
 
 template<typename Key, typename Empty>
 struct lookup<Key, Empty> {
-    using type = PRYSMA_SENTINEL;
+    using type = sentinel_t;
 };
 
 template<typename Key, typename Table>
